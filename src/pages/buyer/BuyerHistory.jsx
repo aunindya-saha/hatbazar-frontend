@@ -12,6 +12,7 @@ const OrderStatusBadge = ({ status }) => {
     PENDING: { color: "bg-yellow-100 text-yellow-800", icon: Clock },
     PROCESSING: { color: "bg-blue-100 text-blue-800", icon: Package },
     COMPLETED: { color: "bg-green-100 text-green-800", icon: CheckCircle },
+    DELIVERED: { color: "bg-green-100 text-green-800", icon: CheckCircle },
     CANCELLED: { color: "bg-red-100 text-red-800", icon: XCircle },
   };
 
@@ -38,9 +39,10 @@ const BuyerHistory = () => {
   const fetchOrders = async () => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
-      const response = await axios.get(`${API_URL}/orders/buyer/${user._id}`);
-      setOrders(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      const response = await axios.get(`${API_URL}/buyers/${user._id}/orders`);
+      setOrders(response.data);
     } catch (error) {
+      console.log(error);
       toast.error("Failed to fetch orders");
     } finally {
       setLoading(false);
@@ -108,24 +110,24 @@ const BuyerHistory = () => {
                   <div key={item._id} className="py-4">
                     <div className="flex items-center">
                       <img
-                        src={item.product.image}
-                        alt={item.product.name}
+                        src={item.product_id.image}
+                        alt={item.product_id.name}
                         className="h-16 w-16 object-cover rounded"
                       />
                       <div className="ml-4 flex-1">
                         <h3 className="text-lg font-medium text-gray-900">
-                          {item.product.name}
+                          {item.product_id.name}
                         </h3>
                         <p className="text-gray-600">
-                          Quantity: {item.quantity} {item.product.unit}
+                          Quantity: {item.quantity} {item.product_id.unit}
                         </p>
                         <p className="text-green-600">
-                          ৳{item.price}/{item.product.unit}
+                          ৳{item.product_id.price_per_unit}/{item.product_id.unit}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-medium text-gray-900">
-                          ৳{(item.price * item.quantity).toFixed(2)}
+                          ৳{item.subtotal.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -142,7 +144,7 @@ const BuyerHistory = () => {
                   <div className="text-right">
                     <p className="text-gray-600">Total Amount:</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      ৳{order.total_amount.toFixed(2)}
+                      ৳{order.total_price.toFixed(2)}
                     </p>
                   </div>
                 </div>

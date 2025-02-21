@@ -31,27 +31,56 @@ const BuyerCart = () => {
     setLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem('user'));
-      const orderData = {
-        buyer_id: user._id,
-        ordered_products: cart.map(item => ({
-          product_id: item.productId,
-          quantity: item.quantity,
-          price: item.price
-        })),
-        total_price: getCartTotal(),
-        shipping_address: shippingAddress,
-        billing_address: shippingAddress,
-        status: "PENDING"
-      };
+      if (!user) {
+        toast.error("Please login to continue");
+        navigate("/login");
+        return;
+      }
 
-      await axios.post(`${API_URL}/orders`, orderData);
-      clearCart();
-      toast.success("Order placed successfully!");
-      navigate("/buyer/history");
+      // Group cart items by seller
+      const ordersBySeller = cart.reduce((acc, item) => {
+        if (!acc[item.sellerId._id]) {
+          acc[item.sellerId._id] = [];
+        }
+        acc[item.sellerId._id].push(item);
+        return acc;
+      }, {});
+
+      console.log(ordersBySeller);
+
+      // Process orders for each seller separately
+      for (const [sellerId, items] of Object.entries(ordersBySeller)) {
+        // Calculate total for this seller's products
+        const sellerTotal = items.reduce((total, item) => total + item.total, 0);
+        console.log(sellerId);
+        // Create order data for this seller
+        const orderData = {
+          buyer_id: user._id,
+          seller_id: sellerId,
+          ordered_products: items.map(item => ({
+            product_id: item.productId,
+            quantity: item.quantity,
+            subtotal: item.total
+          })),
+          total_price: sellerTotal,
+          shipping_address: shippingAddress,
+          billing_address: user.billing_address || shippingAddress
+        };
+
+        // Make API call for this seller's order
+        await axios.post(`${API_URL}/orders`, orderData);
+      }
+      
+      // clearCart();
+      toast.success("Orders placed successfully!");
+      // navigate("/buyer/history");
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to place order");
+      console.log(error);
+      toast.error(error.response?.data?.error || "Failed to place orders");
     } finally {
       setLoading(false);
+      clearCart();
+      navigate("/buyer/history");
     }
   };
 
@@ -75,57 +104,73 @@ const BuyerCart = () => {
     );
   }
 
+  // Group items by seller for display
+  const itemsBySeller = cart.reduce((acc, item) => {
+    if (!acc[item.sellerId]) {
+      acc[item.sellerId] = [];
+    }
+    acc[item.sellerId].push(item);
+    return acc;
+  }, {});
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="divide-y divide-gray-200">
-              {cart.map((item) => (
-                <div key={item.productId} className="p-6">
-                  <div className="flex items-center">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-20 w-20 object-cover rounded"
-                    />
-                    <div className="ml-4 flex-1">
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {item.name}
-                      </h3>
-                      <p className="text-green-600">
-                        ৳{item.price}/{item.unit}
-                      </p>
-                    </div>
-                    <div className="ml-4">
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          handleQuantityChange(item.productId, e.target.value)
-                        }
-                        className="w-20"
+          {Object.entries(itemsBySeller).map(([sellerId, items]) => (
+            <div key={sellerId} className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+              <div className="border-b border-gray-200 px-6 py-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Seller ID: {sellerId}
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-200">
+                {items.map((item) => (
+                  <div key={item.productId} className="p-6">
+                    <div className="flex items-center">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="h-20 w-20 object-cover rounded"
                       />
+                      <div className="ml-4 flex-1">
+                        <h3 className="text-lg font-medium text-gray-900">
+                          {item.name}
+                        </h3>
+                        <p className="text-green-600">
+                          ৳{item.price}/{item.unit}
+                        </p>
+                      </div>
+                      <div className="ml-4">
+                        <Input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            handleQuantityChange(item.productId, e.target.value)
+                          }
+                          className="w-20"
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-lg font-medium text-gray-900">
+                          ৳{item.total.toFixed(2)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => removeFromCart(item.productId)}
+                        className="ml-4 text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
                     </div>
-                    <div className="ml-4">
-                      <p className="text-lg font-medium text-gray-900">
-                        ৳{item.total.toFixed(2)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => removeFromCart(item.productId)}
-                      className="ml-4 text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
 
         <div className="bg-white rounded-xl shadow-md p-6 h-fit">
