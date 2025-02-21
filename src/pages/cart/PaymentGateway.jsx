@@ -40,10 +40,11 @@ const PaymentGateway = () => {
     setLoading(true);
 
     try {
-      // Create orders
+      // Place orders and get their IDs
       const orderPromises = orders.map(orderData => 
         axios.post(`${API_URL}/orders`, orderData)
       );
+      
       const orderResponses = await Promise.all(orderPromises);
       
       // Create transactions for each order
@@ -52,30 +53,18 @@ const PaymentGateway = () => {
           order_id: response.data._id,
           amount: response.data.total_price,
           payment_type: "CARD",
-          status: "SUCCESS",
+          status: "SUCCESS"
         };
         return axios.post(`${API_URL}/transactions`, transactionData);
       });
+
       await Promise.all(transactionPromises);
 
-      // Create reviews for each product in the orders
-      const reviewPromises = orders.flatMap(order => 
-        order.ordered_products.map(product => {
-          const reviewData = {
-            buyer_id: order.buyer_id,
-            product_id: product.product_id,
-            order_id: orderResponses.find(r => r.data.seller_id === order.seller_id)._id,
-          };
-          return axios.post(`${API_URL}/reviews`, reviewData);
-        })
-      );
-      await Promise.all(reviewPromises);
-
-      // Clear cart and show success message
       clearCart();
       toast.success("Payment successful! Orders have been placed.");
       navigate("/buyer/history");
     } catch (error) {
+      console.error(error);
       toast.error(error.response?.data?.error || "Payment failed");
     } finally {
       setLoading(false);

@@ -28,7 +28,6 @@ const BuyerCart = () => {
       return;
     }
 
-    setLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user) {
@@ -46,15 +45,11 @@ const BuyerCart = () => {
         return acc;
       }, {});
 
-      console.log(ordersBySeller);
-
-      // Process orders for each seller separately
-      for (const [sellerId, items] of Object.entries(ordersBySeller)) {
-        // Calculate total for this seller's products
+      // Prepare orders for each seller
+      const preparedOrders = Object.entries(ordersBySeller).map(([sellerId, items]) => {
         const sellerTotal = items.reduce((total, item) => total + item.total, 0);
-        console.log(sellerId);
-        // Create order data for this seller
-        const orderData = {
+        
+        return {
           buyer_id: user._id,
           seller_id: sellerId,
           ordered_products: items.map(item => ({
@@ -66,21 +61,22 @@ const BuyerCart = () => {
           shipping_address: shippingAddress,
           billing_address: user.billing_address || shippingAddress
         };
+      });
 
-        // Make API call for this seller's order
-        await axios.post(`${API_URL}/orders`, orderData);
-      }
+      const totalAmount = preparedOrders.reduce((total, order) => total + order.total_price, 0);
+
+      // Navigate to payment gateway with orders data
+      navigate("/payment", { 
+        state: { 
+          orders: preparedOrders,
+          totalAmount,
+          shippingAddress
+        }
+      });
       
-      // clearCart();
-      toast.success("Orders placed successfully!");
-      // navigate("/buyer/history");
     } catch (error) {
       console.log(error);
-      toast.error(error.response?.data?.error || "Failed to place orders");
-    } finally {
-      setLoading(false);
-      clearCart();
-      navigate("/buyer/history");
+      toast.error("Failed to process checkout");
     }
   };
 

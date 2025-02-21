@@ -77,7 +77,9 @@ function App() {
           {/* Protected Routes */}
           <Route path="/payment" element={
             <ProtectedRoute>
-              <Layout><PaymentGateway /></Layout>
+              <Layout>
+                <PaymentGateway />
+              </Layout>
             </ProtectedRoute>
           } />
           <Route path="/buyer/home" element={
