@@ -36,16 +36,20 @@ const MainLayout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 via-white to-green-50">
       <header
         className={`fixed w-full z-50 transition-all duration-200 ${
-          isScrolled ? "bg-white shadow-md" : "bg-transparent"
+          isScrolled 
+            ? "bg-white/80 backdrop-blur-md shadow-lg" 
+            : "bg-transparent"
         }`}
       >
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="text-2xl font-bold text-green-800">
-              HaatBazar
+            <Link to="/" className="text-2xl font-bold text-green-800 flex items-center">
+              <span className="bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
+                HaatBazar
+              </span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -54,13 +58,16 @@ const MainLayout = ({ children }) => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`text-sm font-medium transition-colors ${
+                  className={`text-sm font-medium transition-colors hover:text-green-600 relative group ${
                     isActive(link.path)
                       ? "text-green-600"
-                      : "text-gray-600 hover:text-green-600"
+                      : "text-gray-600"
                   }`}
                 >
                   {link.name}
+                  <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-green-600 transition-all group-hover:w-full ${
+                    isActive(link.path) ? "w-full" : ""
+                  }`}></span>
                 </Link>
               ))}
             </nav>
@@ -69,42 +76,47 @@ const MainLayout = ({ children }) => {
             <div className="hidden md:flex items-center space-x-4">
               <CartButton />
               <Link to="/login">
-                <Button variant="outline" className="border-green-600 text-green-600">
+                <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
                   Login
                 </Button>
               </Link>
               <Link to="/signup">
-                <Button className="bg-green-600 hover:bg-green-700">
+                <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md hover:shadow-lg transition-all duration-200">
                   Sign Up
+                </Button>
+              </Link>
+              <Link to="/signup" className="hidden lg:block">
+                <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-50">
+                  Become a Seller
                 </Button>
               </Link>
             </div>
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2"
+              className="md:hidden p-2 hover:bg-green-50 rounded-lg transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? (
-                <X className="h-6 w-6 text-gray-600" />
+                <X className="h-6 w-6 text-green-600" />
               ) : (
-                <Menu className="h-6 w-6 text-gray-600" />
+                <Menu className="h-6 w-6 text-green-600" />
               )}
             </button>
           </div>
 
           {/* Mobile Menu */}
           {isMobileMenuOpen && (
-            <div className="md:hidden bg-white border-t">
-              <div className="py-4 space-y-4">
+            <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-green-100">
+              <div className="py-4 space-y-2">
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`block px-4 py-2 text-sm font-medium ${
+                    className={`block px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                       isActive(link.path)
                         ? "text-green-600 bg-green-50"
-                        : "text-gray-600 hover:bg-gray-50"
+                        : "text-gray-600 hover:bg-green-50 hover:text-green-600"
                     }`}
                   >
                     {link.name}
@@ -115,14 +127,19 @@ const MainLayout = ({ children }) => {
                   <Link to="/login" className="block">
                     <Button
                       variant="outline"
-                      className="w-full border-green-600 text-green-600"
+                      className="w-full border-green-600 text-green-600 hover:bg-green-50"
                     >
                       Login
                     </Button>
                   </Link>
                   <Link to="/signup" className="block">
-                    <Button className="w-full bg-green-600 hover:bg-green-700">
+                    <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md">
                       Sign Up
+                    </Button>
+                  </Link>
+                  <Link to="/signup" className="block">
+                    <Button variant="outline" className="w-full border-orange-500 text-orange-500 hover:bg-orange-50">
+                      Become a Seller
                     </Button>
                   </Link>
                 </div>
@@ -134,66 +151,79 @@ const MainLayout = ({ children }) => {
 
       <main className="flex-grow pt-16">{children}</main>
 
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gradient-to-b from-gray-900 to-gray-800 text-white py-12 mt-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold mb-4">HaatBazar</h3>
+              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
+                HaatBazar
+              </h3>
               <p className="text-gray-400">
                 Your trusted marketplace for agricultural products.
               </p>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
+              <h4 className="text-lg font-semibold mb-4 text-green-400">Quick Links</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/about" className="text-gray-400 hover:text-white">
+                  <Link to="/about" className="text-gray-400 hover:text-white transition-colors">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link to="/products" className="text-gray-400 hover:text-white">
+                  <Link to="/products" className="text-gray-400 hover:text-white transition-colors">
                     Products
                   </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="text-gray-400 hover:text-white">
+                  <Link to="/contact" className="text-gray-400 hover:text-white transition-colors">
                     Contact
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Legal</h4>
+              <h4 className="text-lg font-semibold mb-4 text-green-400">Legal</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/privacy" className="text-gray-400 hover:text-white">
+                  <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link to="/terms" className="text-gray-400 hover:text-white">
+                  <Link to="/terms" className="text-gray-400 hover:text-white transition-colors">
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link to="/shipping" className="text-gray-400 hover:text-white">
+                  <Link to="/shipping" className="text-gray-400 hover:text-white transition-colors">
                     Shipping Policy
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Contact</h4>
+              <h4 className="text-lg font-semibold mb-4 text-green-400">Contact</h4>
               <ul className="space-y-2 text-gray-400">
-                <li>Email: support@haatbazar.com</li>
-                <li>Phone: +880 1234-567890</li>
-                <li>Address: Dhaka, Bangladesh</li>
+                <li className="flex items-center space-x-2">
+                  <span>📧</span>
+                  <span>support@haatbazar.com</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span>📱</span>
+                  <span>+880 1234-567890</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span>📍</span>
+                  <span>Dhaka, Bangladesh</span>
+                </li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>© {new Date().getFullYear()} HaatBazar. All rights reserved.</p>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center">
+            <p className="text-gray-400">
+              © {new Date().getFullYear()} HaatBazar. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

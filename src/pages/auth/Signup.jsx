@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,9 +10,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import AuthLayout from "@/components/auth/AuthLayout";
+import { toast } from "sonner";
+import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
+
+const API_URL = 'http://localhost:5001/api';
 
 const Signup = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [userType, setUserType] = useState("buyer");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,10 +30,53 @@ const Signup = () => {
     phone: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Implement signup logic
-    console.log("Signup submitted:", { ...formData, userType });
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let endpoint = '';
+      switch (userType) {
+        case 'buyer':
+          endpoint = '/auth/buyer/register';
+          break;
+        case 'seller':
+          endpoint = '/auth/seller/register';
+          break;
+        default:
+          throw new Error('Invalid user type');
+      }
+
+      // Remove confirmPassword from the data sent to the server
+      const { confirmPassword, ...submitData } = formData;
+      
+      const response = await axios.post(`${API_URL}${endpoint}`, submitData);
+      
+      if (response.data) {
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify({
+          ...response.data,
+          userType
+        }));
+        
+        toast.success("Account created successfully!");
+
+        // Redirect based on user type
+        if (userType === 'buyer') {
+          navigate('/buyer/home');
+        } else if (userType === 'seller') {
+          navigate('/seller/dashboard');
+        }
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to create account");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -109,32 +161,58 @@ const Signup = () => {
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
             </label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              className="mt-1"
-              value={formData.password}
-              onChange={handleChange}
-            />
+            <div className="relative mt-1">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                className="pr-10"
+                value={formData.password}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
+            </div>
           </div>
 
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
               Confirm Password
             </label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              className="mt-1"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-            />
+            <div className="relative mt-1">
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                className="pr-10"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
+            </div>
           </div>
 
           {userType === "seller" && (
@@ -149,8 +227,12 @@ const Signup = () => {
         </div>
 
         <div>
-          <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
-            Create Account
+          <Button 
+            type="submit" 
+            className="w-full bg-green-600 hover:bg-green-700"
+            disabled={loading}
+          >
+            {loading ? "Creating Account..." : "Create Account"}
           </Button>
         </div>
 

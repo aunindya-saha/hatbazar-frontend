@@ -1,11 +1,25 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2 } from "lucide-react";
+import { Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CartPage = () => {
-  const { cart, removeFromCart, updateQuantity, getCartTotal } = useCart();
+  const { cart, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState("");
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user?.shipping_address) {
+      setShippingAddress(user.shipping_address);
+    }
+  }, []);
 
   const handleQuantityChange = (productId, value) => {
     const quantity = parseInt(value);
@@ -14,17 +28,77 @@ const CartPage = () => {
     }
   };
 
+  const handleCheckout = () => {
+    if (!shippingAddress.trim()) {
+      toast.error("Please enter a shipping address");
+      return;
+    }
+
+    if (!isAuthenticated) {
+      toast.error("Please login to complete your purchase", {
+        description: "You'll be redirected to the login page.",
+        action: {
+          label: "Login",
+          onClick: () => navigate("/login"),
+        },
+      });
+      return;
+    }
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+      toast.error("Please login to complete your purchase");
+      navigate("/login");
+      return;
+    }
+
+    // Group products by seller
+    const ordersBySeller = cart.reduce((acc, item) => {
+      if (!acc[item.sellerId]) {
+        acc[item.sellerId] = {
+          seller_id: item.sellerId,
+          ordered_products: [],
+          total_price: 0,
+        };
+      }
+      acc[item.sellerId].ordered_products.push({
+        product_id: item.productId,
+        quantity: item.quantity,
+        subtotal: item.total,
+      });
+      acc[item.sellerId].total_price += item.total;
+      return acc;
+    }, {});
+
+    // Create order data for each seller
+    const orders = Object.values(ordersBySeller).map(order => ({
+      buyer_id: user._id,
+      seller_id: order.seller_id,
+      ordered_products: order.ordered_products,
+      total_price: order.total_price,
+      shipping_address: shippingAddress,
+      billing_address: user.billing_address || shippingAddress,
+      status: "ORDER_PLACED"
+    }));
+
+    // Navigate to payment gateway with orders data
+    navigate("/payment", { state: { orders, totalAmount: getCartTotal() } });
+  };
+
   if (cart.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         <div className="text-center">
+          <div className="flex justify-center mb-6">
+            <ShoppingBag className="h-24 w-24 text-gray-300" />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Your Cart is Empty</h1>
           <p className="text-gray-600 mb-8">
             Browse our products and add some items to your cart.
           </p>
           <Link to="/products">
-            <Button className="bg-green-600 hover:bg-green-700">
-              Continue Shopping
+            <Button size="lg" className="bg-green-600 hover:bg-green-700">
+              Start Shopping
             </Button>
           </Link>
         </div>
@@ -99,7 +173,7 @@ const CartPage = () => {
             </div>
             <div className="flex justify-between">
               <p className="text-gray-600">Shipping</p>
-              <p className="text-gray-900">Calculated at checkout</p>
+              <p className="text-gray-900">Free</p>
             </div>
             <div className="border-t pt-4">
               <div className="flex justify-between">
@@ -109,9 +183,27 @@ const CartPage = () => {
                 </p>
               </div>
             </div>
-            <Button className="w-full bg-green-600 hover:bg-green-700">
-              Proceed to Checkout
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Shipping Address
+              </label>
+              <Input
+                value={shippingAddress}
+                onChange={(e) => setShippingAddress(e.target.value)}
+                placeholder="Enter your shipping address"
+                className="mb-4"
+              />
+            </div>
+
+            <Button
+              onClick={handleCheckout}
+              className="w-full bg-green-600 hover:bg-green-700"
+              disabled={loading}
+            >
+              {loading ? "Processing..." : "Proceed to Payment"}
             </Button>
+
             <Link to="/products">
               <Button
                 variant="outline"

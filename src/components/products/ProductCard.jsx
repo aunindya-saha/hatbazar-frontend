@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
@@ -7,11 +7,17 @@ import { toast } from "sonner";
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const handleAddToCart = (e) => {
     e.preventDefault(); // Prevent navigation when clicking the cart button
     addToCart(product, 1);
     toast.success("Added to cart successfully!");
+  };
+
+  const handleViewDetails = (e) => {
+    e.preventDefault(); // Prevent default link behavior
+    navigate(`/products/${product._id}`);
   };
 
   return (
@@ -36,6 +42,7 @@ const ProductCard = ({ product }) => {
               <Button
                 size="icon"
                 className="bg-white text-green-600 hover:bg-green-50 rounded-full"
+                onClick={handleViewDetails}
               >
                 <Eye className="h-5 w-5" />
               </Button>

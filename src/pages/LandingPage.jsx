@@ -1,71 +1,135 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Truck, Shield, Star } from "lucide-react";
+import { ArrowRight, Shield, Star, Wallet } from "lucide-react";
 import ProductCard from "@/components/products/ProductCard";
-import { getProducts } from "@/services/api";
+import { getProducts, getStats } from "@/services/api";
+import banner from '@/assets/landing_banner.jpg';
 
 const LandingPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    totalBuyers: 0,
+    totalSellers: 0,
+  });
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await getProducts();
-        setProducts(response.data);
+        const [productsRes, statsRes] = await Promise.all([
+          getProducts(),
+          getStats()
+        ]);
+        setProducts(productsRes.data);
+        const statsData = statsRes.data || {};
+        setStats({
+          totalProducts: statsData.totalProducts || 0,
+          totalBuyers: statsData.totalBuyers || 0,
+          totalSellers: statsData.totalSellers || 0,
+        });
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-b from-green-50 to-white">
-        <div className="container mx-auto px-4 py-24">
+      <div className="relative min-h-[600px] flex items-center overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img
+            src={banner}
+            alt="Fresh agricultural products"
+            className="w-full h-full object-cover transform scale-105 animate-slow-zoom"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/50"></div>
+        </div>
+
+        <div className="container mx-auto px-4 py-24 relative z-10">
           <div className="flex flex-col items-center text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-green-800 mb-6">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 animate-fade-in-up">
               Fresh from Farm to Your Table
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl">
+            <p className="text-xl text-gray-200 mb-8 max-w-2xl animate-fade-in-up animation-delay-200">
               Your premier destination for agricultural products. Connect directly with farmers,
               sellers, and buyers in one unified marketplace.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-4 animate-fade-in-up animation-delay-400">
               <Link to="/products">
-                <Button size="lg" className="bg-green-600 hover:bg-green-700">
+                <Button size="lg" className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white shadow-lg hover:shadow-green-500/20 transition-all duration-300">
                   Explore Products <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/signup">
-                <Button size="lg" variant="outline" className="border-green-600 text-green-600">
+                <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300">
                   Become a Seller
                 </Button>
               </Link>
             </div>
           </div>
         </div>
-        {/* Curved bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-white" style={{
-          clipPath: "ellipse(70% 100% at 50% 100%)"
-        }}></div>
+
+        {/* Stats Section */}
+        <div className="absolute -bottom-16 left-0 right-0 z-20">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-white rounded-xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
+                <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 mb-2">
+                  {loading ? (
+                    <div className="animate-pulse h-12 bg-gray-200 rounded"></div>
+                  ) : (
+                    stats.totalProducts.toLocaleString()
+                  )}
+                </h3>
+                <p className="text-gray-600 font-medium">Products Available</p>
+              </div>
+              <div className="bg-white rounded-xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
+                <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 mb-2">
+                  {loading ? (
+                    <div className="animate-pulse h-12 bg-gray-200 rounded"></div>
+                  ) : (
+                    stats.totalSellers.toLocaleString()
+                  )}
+                </h3>
+                <p className="text-gray-600 font-medium">Verified Sellers</p>
+              </div>
+              <div className="bg-white rounded-xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
+                <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 mb-2">
+                  {loading ? (
+                    <div className="animate-pulse h-12 bg-gray-200 rounded"></div>
+                  ) : (
+                    stats.totalBuyers.toLocaleString()
+                  )}
+                </h3>
+                <p className="text-gray-600 font-medium">Happy Buyers</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Features Section */}
-      <div className="container mx-auto px-4 py-24">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-          Why Choose HaatBazar?
+      <div className="container mx-auto px-4 py-32 mt-16 relative z-10">
+        <h2 className="text-3xl font-bold text-center mb-4">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800">
+            Why Choose HaatBazar?
+          </span>
         </h2>
+        <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+          We provide a secure and reliable platform for agricultural trade, connecting farmers directly with buyers.
+        </p>
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-6">
-              <Shield className="h-6 w-6 text-green-600" />
+          <div className="bg-gradient-to-br from-white via-white to-green-50/50 p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group backdrop-blur-sm">
+            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl mb-6 transform group-hover:rotate-6 transition-transform duration-300">
+              <Shield className="h-8 w-8 text-white" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
               Verified Sellers
@@ -75,21 +139,21 @@ const LandingPage = () => {
               Buy with confidence from trusted agricultural producers.
             </p>
           </div>
-          <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-6">
-              <Truck className="h-6 w-6 text-green-600" />
+          <div className="bg-gradient-to-br from-white via-white to-green-50/50 p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group backdrop-blur-sm">
+            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl mb-6 transform group-hover:rotate-6 transition-transform duration-300">
+              <Wallet className="h-8 w-8 text-white" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              Fast Delivery
+              Secure Transaction
             </h3>
             <p className="text-gray-600">
-              Quick and reliable delivery service ensures your products reach you
-              fresh and on time, every time.
+              Your payments are protected with our secure payment system.
+              Safe and hassle-free transactions for both buyers and sellers.
             </p>
           </div>
-          <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-6">
-              <Star className="h-6 w-6 text-green-600" />
+          <div className="bg-gradient-to-br from-white via-white to-green-50/50 p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group backdrop-blur-sm">
+            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl mb-6 transform group-hover:rotate-6 transition-transform duration-300">
+              <Star className="h-8 w-8 text-white" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
               Quality Assured
@@ -103,15 +167,18 @@ const LandingPage = () => {
       </div>
 
       {/* Featured Products Section */}
-      <div className="bg-gray-50 py-24">
+      <div className="bg-gradient-to-b from-green-50/50 via-white to-white py-24">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">
-              Featured Products
+            <h2 className="text-3xl font-bold">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800">
+                Featured Products
+              </span>
             </h2>
             <Link to="/products">
-              <Button variant="link" className="text-green-600 hover:text-green-700">
-                View All Products <ArrowRight className="ml-2 h-5 w-5" />
+              <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 group">
+                View All Products 
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
           </div>

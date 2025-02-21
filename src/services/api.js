@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5001/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -23,6 +23,18 @@ api.interceptors.request.use(
   }
 );
 
+// Add a response interceptor to handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Products
 export const getProducts = () => api.get('/products');
 export const getProduct = (id) => api.get(`/products/${id}`);
@@ -34,6 +46,15 @@ export const deleteProduct = (id) => api.delete(`/products/${id}`);
 export const login = (data) => api.post('/auth/login', data);
 export const register = (data) => api.post('/auth/register', data);
 export const getProfile = () => api.get('/auth/profile');
+export const verifyPhone = (data) => api.post('/auth/verify-phone', data);
+export const resetPassword = (data) => api.post('/auth/reset-password', data);
+export const logout = () => {
+  localStorage.removeItem('token');
+  window.location.href = '/';
+};
+
+// Stats
+export const getStats = () => api.get('/statistics');
 
 // Buyers
 export const getBuyerOrders = () => api.get('/buyers/orders');
