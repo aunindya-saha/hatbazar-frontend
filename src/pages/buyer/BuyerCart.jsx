@@ -38,8 +38,9 @@ const BuyerCart = () => {
           quantity: item.quantity,
           price: item.price
         })),
-        total_amount: getCartTotal(),
+        total_price: getCartTotal(),
         shipping_address: shippingAddress,
+        billing_address: shippingAddress,
         status: "PENDING"
       };
 

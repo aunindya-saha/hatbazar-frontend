@@ -1,8 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { Toaster } from "sonner";
-import MainLayout from "@/components/layout/MainLayout";
-import BuyerLayout from "@/components/layout/BuyerLayout";
+import Layout from "@/components/layout/Layout";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
@@ -67,39 +66,52 @@ function App() {
       <Router>
         <Routes>
           {/* Public Routes */}
-          {/* <MainLayout> */}
-            <Route path="/" element={<MainLayout><LandingPage /></MainLayout>} />
-            <Route path="/products" element={<MainLayout><ProductsPage /></MainLayout>} />
-            <Route path="/products/:id" element={<MainLayout><ProductDetails /></MainLayout>} />
-            <Route path="/cart" element={<MainLayout><CartPage /></MainLayout>} />
-          {/* </MainLayout> */}
-
-          {/* Auth Routes */}
-          <Route path="/login" element={<MainLayout><Login /></MainLayout>} />
-          <Route path="/signup" element={<MainLayout><Signup /></MainLayout>} />
-          <Route path="/forgot-password" element={<MainLayout><ForgotPassword /></MainLayout>} />
+          <Route path="/" element={<Layout><LandingPage /></Layout>} />
+          <Route path="/products" element={<Layout><ProductsPage /></Layout>} />
+          <Route path="/products/:id" element={<Layout><ProductDetails /></Layout>} />
+          <Route path="/cart" element={<Layout><CartPage /></Layout>} />
+          <Route path="/login" element={<Layout><Login /></Layout>} />
+          <Route path="/signup" element={<Layout><Signup /></Layout>} />
+          <Route path="/forgot-password" element={<Layout><ForgotPassword /></Layout>} />
+          
+          {/* Protected Routes */}
           <Route path="/payment" element={
             <ProtectedRoute>
-              <MainLayout><PaymentGateway /></MainLayout>
+              <Layout><PaymentGateway /></Layout>
             </ProtectedRoute>
           } />
-
-          {/* Buyer Routes */}
-          <Route path="/buyer" element={
+          <Route path="/buyer/home" element={
             <ProtectedRoute>
-              <BuyerLayout />
+              <Layout><BuyerHome /></Layout>
             </ProtectedRoute>
-          }>
-            <Route path="home" element={<BuyerHome />} />
-            <Route path="profile" element={<BuyerProfile />} />
-            <Route path="cart" element={<BuyerCart />} />
-            <Route path="history" element={<BuyerHistory />} />
-            <Route path="complaints" element={<BuyerComplaints />} />
-            <Route path="reviews" element={<BuyerReviews />} />
-          </Route>
+          } />
+          <Route path="/buyer/profile" element={
+            <ProtectedRoute>
+              <Layout><BuyerProfile /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/buyer/cart" element={
+            <ProtectedRoute>
+              <Layout><BuyerCart /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/buyer/history" element={
+            <ProtectedRoute>
+              <Layout><BuyerHistory /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/buyer/complaints" element={
+            <ProtectedRoute>
+              <Layout><BuyerComplaints /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/buyer/reviews" element={
+            <ProtectedRoute>
+              <Layout><BuyerReviews /></Layout>
+            </ProtectedRoute>
+          } />
         </Routes>
       </Router>
-      
     </CartProvider>
   );
 }

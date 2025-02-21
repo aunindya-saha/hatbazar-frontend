@@ -8,7 +8,7 @@ const CartButton = () => {
   const itemCount = getCartItemsCount();
 
   return (
-    <Link to="/cart">
+    <Link to="/buyer/cart">
       <Button
         variant="outline"
         className="relative border-green-600 text-green-600"
