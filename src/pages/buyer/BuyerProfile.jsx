@@ -95,11 +95,14 @@ const BuyerProfile = () => {
 
       // Update local storage with new user data
       const updatedUser = { ...user, ...response.data };
-      if (response.data.image) {
-        updatedUser.image = URL.createObjectURL(formData.image);
-      }
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setUser(updatedUser);
+      
+      // Update image preview and clear formData.image
+      if (response.data.image) {
+        setImagePreview(response.data.image);
+        setFormData(prev => ({ ...prev, image: null }));
+      }
       
       toast.success("Profile updated successfully!");
       setIsEditing(false);
@@ -119,25 +122,29 @@ const BuyerProfile = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-lg overflow-hidden border border-green-100">
         <div className="p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
+          {/* Profile header */}
+          <div className="flex items-center justify-between mb-8 pb-6 border-b border-green-100">
+            <h2 className="text-2xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-800">
+              Profile Information
+            </h2>
             <Button
               variant="outline"
               onClick={() => setIsEditing(!isEditing)}
               disabled={loading}
+              className="border-green-600 text-green-600 hover:bg-green-50"
             >
               {isEditing ? "Cancel" : "Edit Profile"}
             </Button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Profile Image */}
-            <div className="flex flex-col items-center mb-6">
-              <div className="relative">
-                <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Profile Image - centered with larger size */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="relative group">
+                <div className="w-40 h-40 rounded-full overflow-hidden bg-gradient-to-br from-green-100 to-green-50 ring-4 ring-green-100 ring-offset-2">
                   {imagePreview ? (
                     <img
                       src={imagePreview}
@@ -155,7 +162,7 @@ const BuyerProfile = () => {
                 {isEditing && (
                   <label
                     htmlFor="image-upload"
-                    className="absolute bottom-0 right-0 bg-green-600 text-white p-2 rounded-full cursor-pointer hover:bg-green-700 transition-colors"
+                    className="absolute bottom-2 right-2 bg-green-600 text-white p-3 rounded-full cursor-pointer hover:bg-green-700 transition-colors shadow-lg"
                   >
                     <Camera className="h-5 w-5" />
                     <input
@@ -168,86 +175,75 @@ const BuyerProfile = () => {
                   </label>
                 )}
               </div>
-              {formData.image && (
-                <p className="text-sm text-gray-500 mt-2">
-                  New image selected: {formData.image.name}
+            </div>
+
+            {/* Form fields in a grid */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                <Label htmlFor="name" className="text-gray-700">Full Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="mt-1 focus:ring-green-500"
+                />
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                <Label htmlFor="email" className="text-gray-700">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={user.email}
+                  disabled
+                  className="mt-1 bg-gray-50 focus:ring-green-500"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Email cannot be changed
                 </p>
-              )}
-            </div>
-
-            {/* Name */}
-            <div>
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className="mt-1"
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={user.email}
-                disabled
-                className="mt-1 bg-gray-50"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Email cannot be changed
-              </p>
-            </div>
-
-            {/* Phone */}
-            <div>
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className="mt-1"
-              />
-            </div>
-
-            {/* Billing Address */}
-            <div>
-              <Label htmlFor="billing_address">Billing Address</Label>
-              <Textarea
-                id="billing_address"
-                name="billing_address"
-                value={formData.billing_address}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className="mt-1"
-                rows={3}
-              />
-            </div>
-
-            {/* Shipping Address */}
-            <div>
-              <Label htmlFor="shipping_address">Shipping Address</Label>
-              <Textarea
-                id="shipping_address"
-                name="shipping_address"
-                value={formData.shipping_address}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className="mt-1"
-                rows={3}
-              />
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                <Label htmlFor="phone" className="text-gray-700">Phone Number</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="mt-1 focus:ring-green-500"
+                />
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                <Label htmlFor="billing_address" className="text-gray-700">Billing Address</Label>
+                <Textarea
+                  id="billing_address"
+                  name="billing_address"
+                  value={formData.billing_address}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="mt-1 focus:ring-green-500"
+                  rows={3}
+                />
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                <Label htmlFor="shipping_address" className="text-gray-700">Shipping Address</Label>
+                <Textarea
+                  id="shipping_address"
+                  name="shipping_address"
+                  value={formData.shipping_address}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="mt-1 focus:ring-green-500"
+                  rows={3}
+                />
+              </div>
             </div>
 
             {isEditing && (
               <Button
                 type="submit"
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg"
                 disabled={loading}
               >
                 {loading ? "Updating..." : "Save Changes"}
@@ -256,12 +252,12 @@ const BuyerProfile = () => {
           </form>
         </div>
 
-        {/* Account Information */}
-        <div className="bg-gray-50 px-8 py-6">
+        {/* Account Information section with updated styling */}
+        <div className="bg-gradient-to-br from-green-50 to-white px-8 py-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Account Information
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex justify-between">
               <span className="text-gray-600">Account Type</span>
               <span className="text-gray-900 font-medium capitalize">{user.userType}</span>

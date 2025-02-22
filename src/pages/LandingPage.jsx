@@ -42,7 +42,7 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
       {/* Hero Section */}
-      <div className="relative min-h-[600px] flex items-center overflow-hidden">
+      <div className="relative min-h-[600px] flex items-center overflow-hidden pb-8">
         {/* Background Image */}
         <div className="absolute inset-0">
           <img
@@ -68,56 +68,54 @@ const LandingPage = () => {
                   Explore Products <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link to="/signup">
+              {/* <Link to="/signup">
                 <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300">
                   Become a Seller
                 </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className="absolute -bottom-16 left-0 right-0 z-20">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-white rounded-xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
-                <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 mb-2">
-                  {loading ? (
-                    <div className="animate-pulse h-12 bg-gray-200 rounded"></div>
-                  ) : (
-                    stats.totalProducts.toLocaleString()
-                  )}
-                </h3>
-                <p className="text-gray-600 font-medium">Products Available</p>
-              </div>
-              <div className="bg-white rounded-xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
-                <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 mb-2">
-                  {loading ? (
-                    <div className="animate-pulse h-12 bg-gray-200 rounded"></div>
-                  ) : (
-                    stats.totalSellers.toLocaleString()
-                  )}
-                </h3>
-                <p className="text-gray-600 font-medium">Verified Sellers</p>
-              </div>
-              <div className="bg-white rounded-xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
-                <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 mb-2">
-                  {loading ? (
-                    <div className="animate-pulse h-12 bg-gray-200 rounded"></div>
-                  ) : (
-                    stats.totalBuyers.toLocaleString()
-                  )}
-                </h3>
-                <p className="text-gray-600 font-medium">Happy Buyers</p>
-              </div>
+              </Link> */}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Stats Section - Moved outside and below hero section */}
+      <div className="container mx-auto px-4 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white rounded-xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
+            <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 mb-2">
+              {loading ? (
+                <div className="animate-pulse h-12 bg-gray-200 rounded"></div>
+              ) : (
+                stats.totalProducts.toLocaleString()
+              )}
+            </h3>
+            <p className="text-gray-600 font-medium">Products Available</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
+            <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 mb-2">
+              {loading ? (
+                <div className="animate-pulse h-12 bg-gray-200 rounded"></div>
+              ) : (
+                stats.totalSellers.toLocaleString()
+              )}
+            </h3>
+            <p className="text-gray-600 font-medium">Verified Sellers</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300 hover:shadow-2xl">
+            <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 mb-2">
+              {loading ? (
+                <div className="animate-pulse h-12 bg-gray-200 rounded"></div>
+              ) : (
+                stats.totalBuyers.toLocaleString()
+              )}
+            </h3>
+            <p className="text-gray-600 font-medium">Happy Buyers</p>
+          </div>
+        </div>
+      </div>
+
       {/* Features Section */}
-      <div className="container mx-auto px-4 py-32 mt-16 relative z-10">
+      <div className="container mx-auto px-4 py-16 relative z-10">
         <h2 className="text-3xl font-bold text-center mb-4">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800">
             Why Choose HaatBazar?
@@ -167,7 +165,7 @@ const LandingPage = () => {
       </div>
 
       {/* Featured Products Section */}
-      <div className="bg-gradient-to-b from-green-50/50 via-white to-white py-24">
+      <div className="bg-gradient-to-b from-green-50/50 via-white to-white py-16">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-12">
             <h2 className="text-3xl font-bold">
@@ -189,7 +187,13 @@ const LandingPage = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {products.slice(0, 8).map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <div className="group transition-all duration-300 hover:shadow-xl rounded-xl overflow-hidden">
+                  <ProductCard 
+                    key={product._id} 
+                    product={product} 
+                    className="group-hover:opacity-90 transition-opacity"
+                  />
+                </div>
               ))}
             </div>
           )}

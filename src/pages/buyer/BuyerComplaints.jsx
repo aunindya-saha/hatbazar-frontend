@@ -41,7 +41,7 @@ const BuyerComplaints = () => {
   const [formData, setFormData] = useState({
     message: "",
     image: null,
-    accuser_id: "", // This will be set when selecting a seller
+    complaint_id: "", // Changed from accuser_id to complaint_id
   });
   const [sellers, setSellers] = useState([]);
   const [imagePreview, setImagePreview] = useState(null);
@@ -54,11 +54,21 @@ const BuyerComplaints = () => {
   const fetchComplaints = async () => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
+      if (!user) {
+        toast.error("Please login to view complaints");
+        return;
+      }
       const response = await axios.get(`${API_URL}/complaints/buyer/${user._id}`);
-      setComplaints(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      if (Array.isArray(response.data)) {
+        setComplaints(response.data);
+      } else {
+        console.error("Unexpected response format:", response.data);
+        setComplaints([]);
+      }
+      setLoading(false);
     } catch (error) {
+      console.error("Fetch complaints error:", error);
       toast.error("Failed to fetch complaints");
-    } finally {
       setLoading(false);
     }
   };
@@ -95,7 +105,7 @@ const BuyerComplaints = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.message.trim() || !formData.accuser_id) {
+    if (!formData.message.trim() || !formData.complaint_id) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -104,14 +114,14 @@ const BuyerComplaints = () => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       const complaintData = new FormData();
-      complaintData.append("complainant_id", user._id);
-      complaintData.append("accuser_id", formData.accuser_id);
+      complaintData.append("complaint_id", formData.complaint_id);
+      complaintData.append("accuser_id", user._id);
       complaintData.append("message", formData.message);
       if (formData.image) {
         complaintData.append("image", formData.image);
       }
 
-      await axios.post(`${API_URL}/complaints`, complaintData, {
+      await axios.post(`${API_URL}/complaints/buyer/${user._id}`, complaintData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -121,7 +131,7 @@ const BuyerComplaints = () => {
       setFormData({
         message: "",
         image: null,
-        accuser_id: "",
+        complaint_id: "",
       });
       setImagePreview(null);
       fetchComplaints();
@@ -141,165 +151,167 @@ const BuyerComplaints = () => {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Complaints</h1>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-green-600 hover:bg-green-700"
-        >
-          {showForm ? "Cancel" : "Submit New Complaint"}
-        </Button>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Title */}
+      <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-800 mb-8">
+        Complaints Management
+      </h1>
+
+      {/* Complaint Form */}
+      <div className="bg-gradient-to-br from-white to-green-50 rounded-xl shadow-lg p-6 border border-green-100 mb-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          Submit a New Complaint
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Select Seller
+            </label>
+            <Select
+              value={formData.complaint_id}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, complaint_id: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a seller" />
+              </SelectTrigger>
+              <SelectContent>
+                {sellers.map((seller) => (
+                  <SelectItem key={seller._id} value={seller._id}>
+                    {seller.business_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Message
+            </label>
+            <Textarea
+              value={formData.message}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, message: e.target.value }))
+              }
+              placeholder="Describe your complaint"
+              required
+              rows={4}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Evidence (Optional)
+            </label>
+            <div className="mt-1 flex items-center space-x-4">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                id="image-upload"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById("image-upload").click()}
+              >
+                Upload Image
+              </Button>
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="h-20 w-20 object-cover rounded"
+                />
+              )}
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full bg-green-600 hover:bg-green-700"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit Complaint"}
+          </Button>
+        </form>
       </div>
 
-      {showForm && (
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            Submit a New Complaint
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Seller
-              </label>
-              <Select
-                value={formData.accuser_id}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, accuser_id: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a seller" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sellers.map((seller) => (
-                    <SelectItem key={seller._id} value={seller._id}>
-                      {seller.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Complaints List */}
+      <div className="mt-12">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+          <MessageSquare className="w-5 h-5 mr-2 text-green-600" />
+          Your Complaints History
+        </h2>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Message
-              </label>
-              <Textarea
-                value={formData.message}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, message: e.target.value }))
-                }
-                placeholder="Describe your complaint"
-                required
-                rows={4}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Evidence (Optional)
-              </label>
-              <div className="mt-1 flex items-center space-x-4">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById("image-upload").click()}
-                >
-                  Upload Image
-                </Button>
-                {imagePreview && (
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="h-20 w-20 object-cover rounded"
-                  />
-                )}
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full bg-green-600 hover:bg-green-700"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Submitting..." : "Submit Complaint"}
-            </Button>
-          </form>
-        </div>
-      )}
-
-      <div className="space-y-6">
         {complaints.length === 0 ? (
-          <div className="text-center py-16">
-            <AlertTriangle className="h-24 w-24 text-gray-300 mx-auto mb-6" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-green-100">
+            <AlertTriangle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
               No Complaints Found
-            </h2>
+            </h3>
             <p className="text-gray-600">
               You haven't submitted any complaints yet.
             </p>
           </div>
         ) : (
-          complaints.map((complaint) => (
-            <div
-              key={complaint._id}
-              className="bg-white rounded-xl shadow-md overflow-hidden"
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Complaint against {complaint.accuser_id.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Submitted on:{" "}
-                      {new Date(complaint.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <ComplaintStatusBadge status={complaint.status} />
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Message:</p>
-                    <p className="text-gray-900 whitespace-pre-wrap">
-                      {complaint.message}
-                    </p>
-                  </div>
-
-                  {complaint.image && (
+          <div className="grid gap-6">
+            {complaints.map((complaint) => (
+              <div
+                key={complaint._id}
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-green-100 overflow-hidden"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 mb-2">
-                        Evidence:
+                      <h3 className="text-lg font-medium text-gray-900">
+                        Complaint against {complaint.complaint_id?.business_name || "Unknown Seller"}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Submitted on:{" "}
+                        {new Date(complaint.createdAt).toLocaleDateString()}
                       </p>
-                      <img
-                        src={`data:image/jpeg;base64,${complaint.image}`}
-                        alt="Evidence"
-                        className="max-w-sm rounded-lg"
-                      />
                     </div>
-                  )}
+                    <ComplaintStatusBadge status={complaint.status || "PENDING"} />
+                  </div>
 
-                  {complaint.response && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-600 mb-2">
-                        Admin Response:
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Message:</p>
+                      <p className="text-gray-900 whitespace-pre-wrap">
+                        {complaint.message}
                       </p>
-                      <p className="text-gray-900">{complaint.response}</p>
                     </div>
-                  )}
+
+                    {complaint.image && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 mb-2">
+                          Evidence:
+                        </p>
+                        <img
+                          src={complaint.image}
+                          alt="Evidence"
+                          className="max-w-sm rounded-lg"
+                        />
+                      </div>
+                    )}
+
+                    {complaint.response && (
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-sm font-medium text-gray-600 mb-2">
+                          Admin Response:
+                        </p>
+                        <p className="text-gray-900">{complaint.response}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </div>

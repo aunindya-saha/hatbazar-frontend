@@ -5,6 +5,10 @@ import { Input } from "@/components/ui/input";
 import { getProduct } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { Star } from "lucide-react";
+import axios from "axios";
+
+const API_URL = 'http://localhost:5001/api';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -12,6 +16,8 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -26,6 +32,22 @@ const ProductDetails = () => {
     };
 
     fetchProduct();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/products/${id}/reviews`);
+        setReviews(response.data.reviews);
+        setAverageRating(response.data.averageRating || 0);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+
+    if (id) {
+      fetchReviews();
+    }
   }, [id]);
 
   const handleQuantityChange = (e) => {
@@ -44,6 +66,21 @@ const ProductDetails = () => {
     addToCart(product, quantity);
     // Navigate to cart page
     window.location.href = "/cart";
+  };
+
+  const StarRating = ({ rating }) => {
+    return (
+      <div className="flex items-center">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`w-4 h-4 ${
+              star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+            }`}
+          />
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -157,6 +194,70 @@ const ProductDetails = () => {
             <div className="mt-2 text-sm text-gray-500">
               <p>This product is sold by a verified seller.</p>
               <p>Contact seller for bulk orders or inquiries.</p>
+            </div>
+          </div>
+
+          {/* Reviews Section */}
+          <div className="mt-12">
+            <div className="border-t pt-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>
+                <div className="flex items-center space-x-2">
+                  <StarRating rating={Math.round(averageRating)} />
+                  <span className="text-lg font-medium text-gray-900">
+                    {averageRating.toFixed(1)}
+                  </span>
+                  <span className="text-gray-500">
+                    ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
+                  </span>
+                </div>
+              </div>
+
+              {reviews.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No reviews yet</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {reviews.map((review) => (
+                    <div
+                      key={review._id}
+                      className="bg-white rounded-lg shadow-sm p-6 border"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium text-gray-900">
+                              {review.buyer_id?.name || "Anonymous"}
+                            </span>
+                            <span className="text-gray-500">•</span>
+                            <span className="text-gray-500">
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="mt-1">
+                            <StarRating rating={review.rating} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {review.comment && (
+                        <p className="text-gray-600 mt-2">{review.comment}</p>
+                      )}
+
+                      {review.image && (
+                        <div className="mt-4">
+                          <img
+                            src={review.image}
+                            alt="Review"
+                            className="max-w-xs rounded-lg"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

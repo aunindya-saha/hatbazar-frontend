@@ -44,8 +44,14 @@ const BuyerReviews = () => {
   const fetchReviews = async () => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
-      const response = await axios.get(`${API_URL}/reviews/buyer/${user._id}`);
-      setReviews(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      const response = await axios.get(`${API_URL}/buyers/${user._id}/reviews`);
+      setReviews(response.data
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .map(review => ({
+          ...review,
+          product: review.product_id // Assuming the endpoint populates product_id
+        }))
+      );
     } catch (error) {
       toast.error("Failed to fetch reviews");
     } finally {
@@ -127,107 +133,65 @@ const BuyerReviews = () => {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">My Reviews</h1>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-800 mb-8">
+        My Reviews
+      </h1>
 
-      <div className="space-y-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {reviews.map((review) => (
           <div
             key={review._id}
-            className="bg-white rounded-xl shadow-md overflow-hidden"
+            className="bg-gradient-to-br from-white to-green-50 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-green-100"
           >
             <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <img
-                    src={review.product.image}
-                    alt={review.product.name}
-                    className="h-16 w-16 object-cover rounded"
-                  />
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {review.product.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Reviewed on: {new Date(review.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(review)}
-                    className="text-blue-600 hover:text-blue-700"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(review._id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+              <div className="flex items-start gap-4">
+                <img
+                  src={review.product.image}
+                  alt={review.product.name}
+                  className="w-24 h-24 object-cover rounded-lg shadow-md"
+                />
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    {review.product.name}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </p>
+                  <StarRating rating={review.rating} disabled />
                 </div>
               </div>
-
-              {editingReview === review._id ? (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rating
-                    </label>
-                    <StarRating
-                      rating={formData.rating}
-                      setRating={(rating) =>
-                        setFormData((prev) => ({ ...prev, rating }))
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Comment
-                    </label>
-                    <Textarea
-                      value={formData.comment}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          comment: e.target.value,
-                        }))
-                      }
-                      rows={4}
-                      required
-                    />
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <Button
-                      type="submit"
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      Save Changes
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setEditingReview(null)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <div className="space-y-2">
-                  <StarRating rating={review.rating} disabled />
-                  <p className="text-gray-800 whitespace-pre-wrap">
-                    {review.comment}
-                  </p>
-                </div>
+              
+              <p className="mt-4 text-gray-700">{review.comment}</p>
+              
+              {review.image && (
+                <img
+                  src={review.image}
+                  alt="Review"
+                  className="mt-4 rounded-lg max-h-48 object-cover"
+                />
               )}
+              
+              <div className="mt-4 flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEdit(review)}
+                  className="text-blue-600 hover:bg-blue-50"
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(review._id)}
+                  className="text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
             </div>
           </div>
         ))}
